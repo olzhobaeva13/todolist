@@ -5,9 +5,12 @@ from .models import Task
 from .serializers import TaskSerializer
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 
 class TaskAPIView(APIView):
     
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         tasks = Task.objects.all()
         serializer = TaskSerializer(tasks, many=True)
@@ -16,10 +19,14 @@ class TaskAPIView(APIView):
 
     def post(self, request):
         serializer = TaskSerializer(data=request.data)
+        user = request.user
+
         if serializer.is_valid():
             body = serializer.validated_data.get('body')
-            estimated_finosh_time = serializer.validated_data.get('estimated_finosh_time')
-            task = Task.objects.create(body = body, estimated_finosh_time=estimated_finosh_time)
+            estimated_finish_time = serializer.validated_data.get('estimated_finish_time')
+            task = Task.objects.create(creator=user,
+                                       body = body,
+                                       estimated_finish_time=estimated_finish_time)
             serializer = TaskSerializer(instance=task)
 
             return Response(serializer.data)
